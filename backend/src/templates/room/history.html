@@ -56,7 +56,7 @@
         <div class="movie-title">{{ item.movie.title }}</div>
         
         <div class="poster-side">
-            <img src="{{ item.movie.poster_preview_url or '/static/default_poster.jpg' }}" class="mini-poster">
+            <img src="/{{ item.movie.poster_preview_url or '/static/default_poster.jpg' }}" class="mini-poster">
         </div>
 
         <div class="info-col">

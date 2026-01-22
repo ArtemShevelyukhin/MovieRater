@@ -131,13 +131,17 @@ def parse_init_data(init_data: str) -> dict:
 
 
 def get_current_user(
-    init_data: Annotated[str, Header(alias="X-Telegram-Init-Data")],
     request: Request,
     db: Session = Depends(get_db),
 ) -> User:
-    if not init_data:
-        raise HTTPException(401, "Missing initData header")
+    # 1. Сначала ищем в Query-параметрах (наш новый способ)
+    encoded_init_data = request.query_params.get("_auth")
 
+    if encoded_init_data:
+        init_data = urllib.parse.unquote(encoded_init_data)
+    else:
+        # 2. Если нет в URL, ищем в заголовках (для fetch)
+        init_data = request.headers.get("X-Telegram-Init-Data")
     telegram_data = parse_init_data(init_data)
 
     user_data_str = telegram_data.get("user")

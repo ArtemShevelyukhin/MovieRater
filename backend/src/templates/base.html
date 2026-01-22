@@ -97,8 +97,9 @@
   <footer>
       <nav class="bottom-nav">
           {# Ссылка на историю #}
-          <a href="{% if room %}{{ url_for('get_room_history', room_id=room.id) }}{% else %}#{% endif %}"
-             class="nav-item {% if 'history' in request.url.path %}active{% endif %}">
+          <a href="javascript:void(0)"
+             onclick="safeNavigate('{{ url_for('get_room_history', room_id=room.id) if room else '#' }}')"
+             class="nav-item">
               <span>📜️</span><span>История</span>
           </a>
 
@@ -123,6 +124,15 @@
 
 <!-- JS для обработки callback -->
 <script>
+function safeNavigate(baseUrl) {
+    if (baseUrl === '#') return;
+
+    const initData = window.Telegram.WebApp.initData;
+    const separator = baseUrl.includes('?') ? '&' : '?';
+
+    // Переходим по адресу /rooms/ID/history?_auth=...
+    window.location.href = baseUrl + separator + "_auth=" + encodeURIComponent(initData);
+}
 function onTelegramAuth(user) {
     fetch('/auth/telegram', {
         method: 'POST',

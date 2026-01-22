@@ -36,6 +36,12 @@ class MovieBase(BaseModel):
 
 class MovieCreate(BaseModel):
     kinopoisk_url: str  # Для добавления фильма
+    added_by: str = None
+
+    @field_validator("kinopoisk_url")
+    @classmethod
+    def strip_trailing_slash(cls, value: str) -> str:
+        return value.rstrip("/")
 
 # class Movie(MovieBase):
 #     id: int

@@ -45,15 +45,18 @@ async def show_room(room_id: str,
 
     # 2. Получаем последний добавленный фильм через таблицу связи MoviesInRoom
     # Используем join для доступа к дате добавления
-    latest_movie_entry = db.query(MoviesInRoom) \
+    result = db.query(MoviesInRoom, Rating.score) \
+        .outerjoin(Rating, MoviesInRoom.movie_id == Rating.movie_id) \
         .filter(MoviesInRoom.room_id == room_id) \
-        .order_by(MoviesInRoom.added_date.desc()) \
+        .filter(Rating.score == None) \
+        .order_by(MoviesInRoom.added_date.asc()) \
         .first()
 
-    current_movie = None
     user_rating = 0
 
-    current_movie = latest_movie_entry.movie
+    latest_movie_entry, score = result
+    current_movie = latest_movie_entry.movie  # Теперь это работает, так как entry — это MoviesInRoom
+    user_rating = score
 
     # 3. Ищем оценку текущего пользователя (заглушка ID=1, пока нет системы сессий)
     # В реальном коде используйте user.id из get_current_user
@@ -142,10 +145,11 @@ async def add_movie_to_room(
         new_movie = existing_film
 
     room = db.query(Room).filter(Room.id == room_id).one_or_none()
+    added_by = create_movie_data.added_by if create_movie_data.added_by else user.id
     mv = MoviesInRoom(
         movie_id=new_movie.id,
         room_id=room.id,
-        added_by=user.id,
+        added_by=added_by,
         room=room
     )
     db.add(mv)
@@ -197,12 +201,16 @@ async def submit_rating(
 
 
 @rooms.get("/{room_id}/history", name="get_room_history")
-async def submit_rating(
+async def get_room_history(
                     room_id: str,
                     request: Request,
                     sort_by: str = "date",
                     db: Session = Depends(get_db),
-                    user: User = Depends(get_current_user)
+                    user: User = Depends(get_cur
+
+
+
+    rent_user)
 ):
     query = db.query(
         Movie,
