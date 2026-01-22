@@ -1,0 +1,30 @@
+General
+- SQLAlchemy: "Session Basics"
+
+Вопросы по дизайну приложения
+- что лучше, делать проверку через запрос в бд или логика через коммит и ловлю ошибки как выше ?
+какой бест практис
+https://docs.sqlalchemy.org/en/14/core/constraints.html#unique-constraint
+
+- Паттерн с несколькими Pydantic-моделями в FastAPI
+Этот паттерн описан в разделе документации FastAPI по интеграции с SQLAlchemy для CRUD-операций. Конкретно, в туториале "SQL (Relational) Databases" показаны модели ItemBase, ItemCreate и Item для разделения логики создания и чтения.
+Ссылка: https://fastapi.tiangolo.com/tutorial/sql-databases/#create-the-pydantic-models
+В примере там используется orm_mode (теперь from_attributes в Pydantic 2.x) для совместимости с ORM. Это соответствует тому, что я описывал ранее — базовая модель для общих полей, Create для входа (без id), полная для ответа.
+Для портфолио: Укажите, что паттерн взят из этого раздела, адаптирован для вашего проекта.
+
+- какая зона ответственности и граница применения pydantic класса
+
+- Как понять, откуда FastAPI берёт параметры
+
+-https://sorokin.engineer/posts/ru/python_super.html
+
+- validate_telegram_hash - https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
+
+- Association Object. Технические пояснения
+Association Object: Ваша модель MoviesInRoom — это "объект ассоциации". В SQLAlchemy существует два способа работы со связями "многие-ко-многим":
+
+secondary: используется для простых связей, где есть только два внешних ключа.
+
+Direct Access (Прямой доступ): используется, когда в таблице связи есть дополнительные данные (как ваши added_by, added_date). В этом случае рекомендуется работать с моделью связи напрямую, как с обычной таблицей.
+
+

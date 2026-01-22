@@ -1,0 +1,40 @@
+###
+GET http://localhost:8000/
+
+###
+POST http://localhost:5050/rooms/create
+Content-Type: application/json
+
+{ "name" : "КиноКрекер"}
+
+###
+POST http://localhost:5050/rooms/CPG90rUAf/movies
+Content-Type: application/json
+
+
+//{
+//  "create_movie_data": {
+//    "kinopoisk_url": "https://www.kinopoisk.ru/film/4926454"
+//  },
+//  "data": {
+//    "init_data": "query_id=AAFzgOMMAAAAAHOA4wwB1fMk&user=%7B%22id%22%3A216236147%2C%22first_name%22%3A%22Artem%22%2C%22last_name%22%3A%22Fr%22%2C%22username%22%3A%22artemshe%22%2C%22language_code%22%3A%22ru%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2F-fANURqo1aqWm39F74NK7aU9GrJBEoDdEE8mU5A6Els.svg%22%7D&auth_date=1768941276&signature=Wefn7IEkNKB4XREdVjYnZbkHdbwyk0N0pNIuwb604FBxdLubs8hMgbnQg8FLzeU_wmOQeXMTxsGk0iZY7-ZdCQ&hash=2f1af02b8ad171b587cc27bed00f8727c06f28d8a17033d59e683d380b984d56"
+//  }
+//}
+{
+  "create_movie_data": {
+    "kinopoisk_url": "https://www.kinopoisk.ru/film/258687"
+  },
+  "data": {
+    "init_data": "query_id=AAFzgOMMAAAAAHOA4wwB1fMk&user=%7B%22id%22%3A216236147%2C%22first_name%22%3A%22Artem%22%2C%22last_name%22%3A%22Fr%22%2C%22username%22%3A%22artemshe%22%2C%22language_code%22%3A%22ru%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2F-fANURqo1aqWm39F74NK7aU9GrJBEoDdEE8mU5A6Els.svg%22%7D&auth_date=1768941276&signature=Wefn7IEkNKB4XREdVjYnZbkHdbwyk0N0pNIuwb604FBxdLubs8hMgbnQg8FLzeU_wmOQeXMTxsGk0iZY7-ZdCQ&hash=2f1af02b8ad171b587cc27bed00f8727c06f28d8a17033d59e683d380b984d56"
+  }
+}
+
+<> 2025-12-24T170344.422.json
+<> 2025-12-24T170144.422.json
+<> 2025-12-24T170119.422.json
+<> 2025-12-24T170050.422.json
+<> 2025-12-24T165146.422.json
+<> 2025-12-24T165003.422.json
+<> 2025-12-24T164813.422.json
+
+

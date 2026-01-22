@@ -1,0 +1,42 @@
+x: str = Body(...) или использовать Pydantic ?
+
+можно ли проверять с помощью БД что комната уже создана ? Или лучше делать это на стороне сервера в питоне коде ?
+
+Изучите Pydantic docs (fastapi.tiangolo.com/tutorial/body-multiple-params/) — добавьте в портфолио примеры с валидаторами (@validator).
+
+как запустить в дебаг моде Фастапи проект в Pycharm
+
+---
+что такое Роуттер ?
+
+Вариант 5. Dependency на уровне роутера
+
+Если много эндпоинтов используют БД:
+
+router = APIRouter(dependencies=[Depends(get_db)])
+
+@router.post("/register")
+def register(telegram_token: str, db: Session = Depends(get_db)):
+    ...
+
+
+Или даже так:
+
+@router.post("/register")
+def register(
+    telegram_token: str,
+    db: Session = Depends()
+):
+
+
+(если get_db — dependency по умолчанию)
+
+✔️ уменьшает дублирование
+✔️ чистый код
+
+---
+
+что такое Annotated и как использовать
+
+---
+TODO: починить стартап конфиг в Main

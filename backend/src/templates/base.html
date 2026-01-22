@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}MovieRater{% endblock %}</title>
+
+  {% block head_styles %}
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --surface: #141414;
+      --text: #e0e0e0;
+      --text-secondary: #a0a0a0;
+      --accent: #e50914;
+      --star: #ffd700;
+      --border: #222;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    header {
+      padding: 12px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .menu-btn { font-size: 1.6rem; background:none; border:none; color:var(--text); cursor:pointer; }
+    .room-name { font-size: 1.1rem; font-weight: 600; }
+
+    main {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+    }
+
+    footer {
+      padding: 12px 16px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+    }
+
+    .bottom-nav {
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      text-decoration: none;
+    }
+
+    .nav-item.active { color: var(--text); font-weight: 600; }
+    .nav-item span { font-size: 1.5rem; }
+
+    @media (min-width: 480px) {
+      main { padding: 24px; }
+    }
+  </style>
+  {% endblock %}
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <header>
+    <button class="menu-btn" aria-label="Меню">☰</button>
+    <div class="room-name">{% block room_name %}MovieRater{% endblock %}</div>
+    <div></div>
+  </header>
+
+  <main>
+    {% block content %}
+    {% endblock %}
+    <div id="telegram-login"></div>
+  </main>
+
+  <footer>
+      <nav class="bottom-nav">
+          {# Ссылка на историю #}
+          <a href="{% if room %}{{ url_for('get_room_history', room_id=room.id) }}{% else %}#{% endif %}"
+             class="nav-item {% if 'history' in request.url.path %}active{% endif %}">
+              <span>📜️</span><span>История</span>
+          </a>
+
+          {# Ссылка на текущий фильм (главный экран комнаты) #}
+          <a href="{% if room %}{{ url_for('show_room', room_id=room.id) }}{% else %}#{% endif %}"
+             class="nav-item {% if 'history' not in request.url.path and 'stats' not in request.url.path %}active{% endif %}">
+              <span>🎬</span><span>Фильм</span>
+          </a>
+
+          {# Заглушка для статистики #}
+          <a href="#" class="nav-item">
+              <span>📊</span><span>Статистика</span>
+          </a>
+      </nav>
+  </footer>
+
+  {% block scripts %}
+  {% endblock %}
+
+</body>
+</html>
+
+<!-- JS для обработки callback -->
+<script>
+function onTelegramAuth(user) {
+    fetch('/auth/telegram', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(user)
+    }).then(response => {
+        if (response.ok) {
+            window.location.href = '/';  // Перенаправление после успеха
+        } else {
+            alert('Ошибка авторизации');
+        }
+    });
+}
+</script>

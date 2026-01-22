@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MovieRater — Комната</title>
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --surface: #141414;
+      --text: #e0e0e0;
+      --text-secondary: #a0a0a0;
+      --accent: #e50914;
+      --star: #ffd700;
+      --border: #222;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    header {
+      padding: 12px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .menu-btn { font-size: 1.6rem; background:none; border:none; color:var(--text); cursor:pointer; }
+    .room-name { font-size: 1.1rem; font-weight: 600; }
+
+    main {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .poster-container {
+      width: 100%;
+      max-width: 380px;
+      aspect-ratio: 2 / 3;
+      background: #111;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    }
+
+    .poster { width:100%; height:100%; object-fit:cover; }
+
+    .rating-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 340px;
+    }
+
+    .rating-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.8rem;
+      user-select: none;
+    }
+
+    .star {
+      color: var(--star);
+      font-size: 2.2rem;
+      line-height: 1;
+    }
+
+    .numbers {
+      display: flex;
+      gap: 6px;
+      font-size: 1.35rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .number {
+      cursor: pointer;
+      width: 28px;
+      text-align: center;
+      transition: all 0.12s;
+    }
+
+    .number:hover {
+      color: var(--text);
+      transform: scale(1.15);
+    }
+
+    .number.selected {
+      color: var(--star);
+      font-weight: 700;
+    }
+
+    .current-rating {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+    }
+
+    .current-rating strong {
+      color: var(--text);
+    }
+
+    footer {
+      padding: 12px 16px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+    }
+
+    .bottom-nav {
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      text-decoration: none;
+    }
+
+    .nav-item.active { color: var(--text); font-weight: 600; }
+    .nav-item span { font-size: 1.5rem; }
+
+    @media (min-width: 480px) {
+      main { padding: 24px; }
+      .poster-container { max-width: 420px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <button class="menu-btn" aria-label="Меню">☰</button>
+    <div class="room-name">Комната «Киношники 2026»</div>
+    <div></div>
+  </header>
+
+  <main>
+    <div class="poster-container">
+      <img
+        class="poster"
+        src="https://images.alphacoders.com/135/1356780.jpg"
+        alt="Chainsaw Man">
+    </div>
+
+    <div class="rating-block">
+      <div class="rating-row">
+        <span class="star">★</span>
+        <div class="numbers" id="numbers">
+          <span class="number" data-value="1">1</span>
+          <span class="number" data-value="2">2</span>
+          <span class="number" data-value="3">3</span>
+          <span class="number" data-value="4">4</span>
+          <span class="number" data-value="5">5</span>
+          <span class="number" data-value="6">6</span>
+          <span class="number" data-value="7">7</span>
+          <span class="number" data-value="8">8</span>
+          <span class="number" data-value="9">9</span>
+          <span class="number" data-value="10">10</span>
+        </div>
+      </div>
+
+      <div class="current-rating">
+        Ваша оценка: <strong id="rating-value">не поставлена</strong>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <nav class="bottom-nav">
+      <a href="#" class="nav-item"><span>📜️</span><span>История просмотра</span></a>
+      <a href="#" class="nav-item active"><span>🎬</span><span>Добавить фильм</span></a>
+      <a href="#" class="nav-item"><span>📊</span><span>Статистика</span></a>
+    </nav>
+  </footer>
+
+  <script>
+    const numbers = document.querySelectorAll('.number');
+    const ratingDisplay = document.getElementById('rating-value');
+
+    let currentRating = 0;
+
+    numbers.forEach(num => {
+      num.addEventListener('click', () => {
+        currentRating = parseInt(num.dataset.value);
+        updateSelection();
+        ratingDisplay.textContent = currentRating;
+
+        // TODO: отправить на сервер
+        // fetch(..., { body: JSON.stringify({ score: currentRating }) })
+      });
+    });
+
+    function updateSelection() {
+      numbers.forEach(num => {
+        if (parseInt(num.dataset.value) === currentRating) {
+          num.classList.add('selected');
+        } else {
+          num.classList.remove('selected');
+        }
+      });
+    }
+
+    // Если оценка уже была — раскомментировать и подставить значение
+    // currentRating = {{ user_rating|default(0) }};
+    // if (currentRating) updateSelection();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}{{ room.name }} — Оценка{% endblock %}
+
+{% block head_styles %}
+{{ super() }}
+<style>
+  /* Центрируем контейнер и ограничиваем его высоту */
+  .movie-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between; /* Распределяем контент */
+    width: 100%;
+    height: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 10px 0; /* Небольшие отступы, чтобы не прилипало к краям */
+  }
+
+  .movie-title {
+    font-size: 1.1rem;
+    margin: 5px 0;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 90%;
+  }
+
+  /* Адаптивный постер */
+  .poster-wrapper {
+    /* Постер будет занимать около 45% высоты экрана, но не более 320px */
+    height: 45vh;
+    max-height: 320px;
+    aspect-ratio: 2 / 3; /* Сохраняем пропорции кинопостера */
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    border: 1px solid var(--border);
+  }
+
+  .poster-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .rating-section {
+    width: 95%;
+    margin-bottom: 10px;
+  }
+
+  .rating-label {
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+
+  .rating-scale {
+    display: flex;
+    justify-content: space-between;
+    background: var(--surface);
+    padding: 6px;
+    border-radius: 30px;
+    border: 1px solid var(--border);
+  }
+
+  .rate-btn {
+    width: 28px; /* Уменьшили размер, чтобы влезло на узкие экраны */
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: var(--text-secondary);
+  }
+
+  /* Цвета оценок */
+  /* 1-4: Красный */
+  .rate-btn.low.active { background: #ff4d4d; color: white; transform: scale(1.1); }
+  /* 5-6: Серый */
+  .rate-btn.mid.active { background: #808080; color: white; transform: scale(1.1); }
+  /* 7-10: Зеленый */
+  .rate-btn.high.active { background: #4caf50; color: white; transform: scale(1.1); }
+
+  .status-msg {
+    font-size: 0.75rem;
+    height: 1rem;
+    margin-top: 5px;
+    color: var(--text-secondary);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="movie-container">
+  {% if current_movie %}
+    <h2 class="movie-title">{{ current_movie.title }}</h2>
+
+    <div class="poster-wrapper">
+      <img src="{{ current_movie.poster_url }}" alt="{{ current_movie.title }}">
+    </div>
+
+    <div class="rating-section">
+      <p class="rating-label">Ваша оценка:</p>
+      <div class="rating-scale">
+        {% for i in range(1, 11) %}
+          {% set r_type = "low" if i <= 4 else ("mid" if i <= 6 else "high") %}
+          <div class="rate-btn {{ r_type }} {% if user_rating == i %}active{% endif %}"
+               onclick="submitRating(this, {{ i }})">
+            {{ i }}
+          </div>
+        {% endfor %}
+      </div>
+      <div id="status-info" class="status-msg"></div>
+    </div>
+  {% else %}
+    <p>Фильмов пока нет</p>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function submitRating(element, score) {
+    const statusInfo = document.getElementById('status-info');
+
+    // Визуальное переключение
+    document.querySelectorAll('.rate-btn').forEach(btn => btn.classList.remove('active'));
+    element.classList.add('active');
+    statusInfo.innerText = "Сохранение...";
+
+    try {
+        const response = await fetch("{{ url_for('submit_rating', room_id=room.id) }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Telegram-Init-Data': window.Telegram?.WebApp?.initData || ""
+            },
+            body: JSON.stringify({
+                movie_id: {{ current_movie.id if current_movie else 0 }},
+                score: score
+            })
+        });
+
+        if (!response.ok) throw new Error();
+        statusInfo.innerText = "Оценка " + score + " сохранена";
+    } catch (err) {
+        statusInfo.innerText = "Ошибка сохранения";
+        alert('Не удалось сохранить оценку');
+    }
+}
+</script>
+{% endblock %}
