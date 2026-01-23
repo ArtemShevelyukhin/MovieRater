@@ -56,3 +56,5 @@ with Session(engine) as session:
     # Проверяем список участников комнаты
     current_room = session.get(Room, new_room.id)
     print(f"Участники комнаты '{current_room.name}': {[u.username for u in current_room.members]}")
+
+    session.query(Movie)

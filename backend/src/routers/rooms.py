@@ -15,6 +15,7 @@ from starlette.templating import Jinja2Templates
 
 from database import get_db
 from models import Movie, Room, User, MoviesInRoom, Rating
+from services import get_next_unrated_movie_for_user
 from utilites import parse_init_data, get_current_user
 from schemas import MovieCreate, RoomCreate, RatingCreate  # создадим схемы ниже
 from utilites import get_movie_info_from_kp_url
@@ -45,33 +46,22 @@ async def show_room(room_id: str,
 
     # 2. Получаем последний добавленный фильм через таблицу связи MoviesInRoom
     # Используем join для доступа к дате добавления
-    result = db.query(MoviesInRoom, Rating.score) \
-        .outerjoin(Rating, MoviesInRoom.movie_id == Rating.movie_id) \
-        .filter(MoviesInRoom.room_id == room_id) \
-        .filter(Rating.score == None) \
-        .order_by(MoviesInRoom.added_date.asc()) \
-        .first()
-
-    user_rating = 0
-
-    latest_movie_entry, score = result
-    current_movie = latest_movie_entry.movie  # Теперь это работает, так как entry — это MoviesInRoom
-    user_rating = score
+    current_movie, rating = get_next_unrated_movie_for_user(db, room_id, user.id)
 
     # 3. Ищем оценку текущего пользователя (заглушка ID=1, пока нет системы сессий)
-    # В реальном коде используйте user.id из get_current_user
-    rating_obj = db.query(Rating).filter(
-        Rating.movie_id == current_movie.id,
-        Rating.user_id == user.id
-    ).first()
-    if rating_obj:
-        user_rating = rating_obj.score
+    # # В реальном коде используйте user.id из get_current_user
+    # rating_obj = db.query(Rating).filter(
+    #     Rating.movie_id == current_movie.id,
+    #     Rating.user_id == user.id
+    # ).first()
+    # if rating_obj:
+    #     user_rating = rating_obj.score
 
     return templates.TemplateResponse("room/detail.html", {
         "request": request,
         "room": room,
         "current_movie": current_movie,
-        "user_rating": user_rating
+        "user_rating": rating.score if rating else None
     })
 
 @rooms.get("/")
@@ -169,10 +159,16 @@ async def add_movie_to_room(
 @rooms.post("/{room_id}/ratings", name="submit_rating")
 async def submit_rating(
                     room_id: str,
+                    request: Request,
                     rating_create: RatingCreate,
                     db: Session = Depends(get_db),
                     user: User = Depends(get_current_user)
 ):
+    # Получить комнату и проверить членство
+    room = db.query(Room).filter(Room.id == room_id).first()
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+
     existing_rating = db.query(Rating).filter(
         Rating.user_id == user.id,
         Rating.movie_id == rating_create.movie_id
@@ -197,7 +193,20 @@ async def submit_rating(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Ошибка при сохранении оценки, {e}")
 
-    return {"status": "success", "new_score": rating_create.score}
+    next_movie_in_room, rating = get_next_unrated_movie_for_user(db, room_id, user.id)
+
+    if next_movie_in_room:
+        return {
+            "status": "success",
+            "has_next": True,
+            "movie": {
+                "id": next_movie_in_room.id,
+                "title": next_movie_in_room.title,
+                "poster_url": next_movie_in_room.poster_url or "/static/default.jpg"
+            }
+        }
+
+    return {"status": "success", "has_next": False}
 
 
 @rooms.get("/{room_id}/history", name="get_room_history")
@@ -206,11 +215,7 @@ async def get_room_history(
                     request: Request,
                     sort_by: str = "date",
                     db: Session = Depends(get_db),
-                    user: User = Depends(get_cur
-
-
-
-    rent_user)
+                    user: User = Depends(get_current_user)
 ):
     query = db.query(
         Movie,

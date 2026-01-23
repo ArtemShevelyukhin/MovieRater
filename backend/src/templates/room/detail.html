@@ -89,11 +89,33 @@
   .rate-btn.high.active { background: #4caf50; color: white; transform: scale(1.1); }
 
   .status-msg {
-    font-size: 0.75rem;
-    height: 1rem;
-    margin-top: 5px;
-    color: var(--text-secondary);
+      font-size: 0.75rem;
+      height: 1rem;
+      margin-top: 5px;
+      color: var(--text-secondary);
   }
+
+  .skip-button {
+      display: block; /* Делаем элемент блочным для работы margin: auto */
+      margin: 20px auto 0; /* 20px сверху, auto слева/справа (центрирование), 0 снизу */
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      width: fit-content; /* Ширина кнопки подстраивается под текст */
+  }
+
+  .skip-button:hover {
+      color: var(--text);
+      border-color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.05); /* Легкий эффект при наведении */
+  }
+
+
 </style>
 {% endblock %}
 
@@ -107,17 +129,20 @@
     </div>
 
     <div class="rating-section">
-      <p class="rating-label">Ваша оценка:</p>
+      <p class="rating-label">Ваша оценка: <span id="rating-value">{% if user_rating %}{{ user_rating }}{% else %}не поставлена{% endif %}</span></p>
       <div class="rating-scale">
         {% for i in range(1, 11) %}
           {% set r_type = "low" if i <= 4 else ("mid" if i <= 6 else "high") %}
-          <div class="rate-btn {{ r_type }} {% if user_rating == i %}active{% endif %}"
-               onclick="submitRating(this, {{ i }})">
+          {# Добавлен класс rate-btn и data-value #}
+          <div class="rate-btn {{ r_type }} {% if i == user_rating %}active{% endif %}" data-value="{{ i }}">
             {{ i }}
           </div>
         {% endfor %}
       </div>
       <div id="status-info" class="status-msg"></div>
+      <button id="skip-btn" class="skip-button {% if user_rating == None %}active{% endif %}">
+        Пропустить оценку
+      </button>
     </div>
   {% else %}
     <p>Фильмов пока нет</p>
@@ -127,15 +152,66 @@
 
 {% block scripts %}
 <script>
-async function submitRating(element, score) {
-    const statusInfo = document.getElementById('status-info');
+// 1. Используем правильный селектор .rate-btn
+const numbers = document.querySelectorAll('.rate-btn');
+const ratingDisplay = document.getElementById('rating-value');
+const skipBtn = document.getElementById('skip-btn');
+const statusInfo = document.getElementById('status-info');
 
-    // Визуальное переключение
+async function handleRatingClick(element, score) {
+    const statusInfo = document.getElementById('status-info');
+    const container = document.querySelector('.movie-container');
+
+    try {
+        const response = await fetch("{{ url_for('rooms.submit_rating', room_id=room.id) }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                movie_id: current_movie_id, // Используем переменную
+                score: score
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.has_next) {
+            // Плавное обновление контента
+            updateMovieUI(data.movie);
+        } else {
+            container.innerHTML = "<h2>Ура! Вы оценили все фильмы в этой комнате.</h2>";
+        }
+
+    } catch (err) {
+        statusInfo.innerText = "Ошибка сети";
+    }
+}
+
+function updateMovieUI(movie) {
+    // 1. Обновляем заголовок
+    document.querySelector('.movie-title').innerText = movie.title;
+
+    // 2. Обновляем постер
+    document.querySelector('.poster-wrapper img').src = movie.poster_url;
+
+    // 3. Сбрасываем кнопки оценок
     document.querySelectorAll('.rate-btn').forEach(btn => btn.classList.remove('active'));
-    element.classList.add('active');
+    document.getElementById('skip-btn').classList.remove('active');
+    document.getElementById('rating-val-display').innerText = "не поставлена";
+    document.getElementById('status-info').innerText = "";
+
+    // 4. Обновляем ID текущего фильма для следующего запроса
+    current_movie_id = movie.id;
+}
+
+// В начале скрипта инициализируем ID
+let current_movie_id = {{ current_movie.id if current_movie else 0 }};
+
+
+async function submitRating(score) {
     statusInfo.innerText = "Сохранение...";
 
     try {
+        // Убедись, что имя эндпоинта совпадает с тем, что в rooms.py (обычно 'rooms.submit_rating')
         const response = await fetch("{{ url_for('submit_rating', room_id=room.id) }}", {
             method: 'POST',
             headers: {
@@ -149,11 +225,37 @@ async function submitRating(element, score) {
         });
 
         if (!response.ok) throw new Error();
-        statusInfo.innerText = "Оценка " + score + " сохранена";
+
+        statusInfo.innerText = score === null ? "Пропущено" : "Оценка " + score + " сохранена";
+        ratingDisplay.textContent = score === null ? "пропущено" : score;
     } catch (err) {
         statusInfo.innerText = "Ошибка сохранения";
-        alert('Не удалось сохранить оценку');
+        console.error(err);
     }
+
 }
+
+// Обработка клика по цифрам
+numbers.forEach(num => {
+    num.addEventListener('click', async () => {
+        const val = parseInt(num.dataset.value);
+
+        // Визуальное обновление
+        numbers.forEach(n => n.classList.remove('active'));
+        num.classList.add('active');
+        skipBtn.classList.remove('active');
+
+        await submitRating(val);
+    });
+});
+
+// Обработка клика по "Пропустить"
+skipBtn.addEventListener('click', async () => {
+    // Визуальное обновление
+    numbers.forEach(n => n.classList.remove('active'));
+    skipBtn.classList.add('active');
+
+    await submitRating(null);
+});
 </script>
 {% endblock %}

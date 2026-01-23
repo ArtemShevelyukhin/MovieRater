@@ -49,10 +49,12 @@ class MovieCreate(BaseModel):
 
 class RatingBase(BaseModel):
     movie_id: int
-    score: float
+    score: float | None
 
     @field_validator('score')
     def validate_score(cls, value: float) -> float:
+        if value is None:
+            return value
         if not 1 <= value <= 10 or (value * 2) % 1 != 0:  # Шаг 0.5
             raise ValueError('Score must be between 1 and 10 with 0.5 step')
         return value

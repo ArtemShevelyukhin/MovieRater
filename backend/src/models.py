@@ -40,11 +40,13 @@ class Movie(Base):
     poster_url: Mapped[str | None] = mapped_column(String(255), nullable=True)  # Локальный URL, напр. /static/posters/movie_id.jpg
     poster_preview_url: Mapped[str | None] = mapped_column(String(255), nullable=True)  # Локальный URL, напр. /static/posters/movie_id.jpg
 
+    rating: Mapped["Rating"] = relationship()
+
 class Rating(Base):
     __tablename__ = 'ratings'
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), primary_key=True)
     movie_id: Mapped[int] = mapped_column(ForeignKey('movies.id'), primary_key=True)
-    score: Mapped[float] = mapped_column(Float)  # 1-10 с шагом 0.5
+    score: Mapped[float] = mapped_column(Float, nullable=True)  # 1-10 с шагом 0.5
 
     user: Mapped["User"] = relationship()
     movie: Mapped["Movie"] = relationship()
