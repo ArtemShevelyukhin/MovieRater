@@ -499,7 +499,7 @@
     <routine id="190" parent="1" name="fts3_tokenizer"/>
     <schema id="191" parent="1" name="main">
       <Current>1</Current>
-      <LastIntrospectionLocalTimestamp>2026-01-23.10:59:22</LastIntrospectionLocalTimestamp>
+      <LastIntrospectionLocalTimestamp>2026-01-23.17:57:56</LastIntrospectionLocalTimestamp>
     </schema>
     <argument id="192" parent="16">
       <ArgumentDirection>R</ArgumentDirection>
@@ -1705,139 +1705,144 @@ room_id</ColNames>
       <Position>3</Position>
       <StoredType>FLOAT|0s</StoredType>
     </column>
-    <foreign-key id="584" parent="557">
+    <column id="584" parent="557" name="skipped">
+      <NotNull>1</NotNull>
+      <Position>4</Position>
+      <StoredType>BOOLEAN|0s</StoredType>
+    </column>
+    <foreign-key id="585" parent="557">
       <ColNames>user_id</ColNames>
       <RefColNames>id</RefColNames>
       <RefTableName>users</RefTableName>
     </foreign-key>
-    <foreign-key id="585" parent="557">
+    <foreign-key id="586" parent="557">
       <ColNames>movie_id</ColNames>
       <RefColNames>id</RefColNames>
       <RefTableName>movies</RefTableName>
     </foreign-key>
-    <index id="586" parent="557" name="sqlite_autoindex_ratings_1">
+    <index id="587" parent="557" name="sqlite_autoindex_ratings_1">
       <ColNames>user_id
 movie_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <Unique>1</Unique>
     </index>
-    <key id="587" parent="557">
+    <key id="588" parent="557">
       <ColNames>user_id
 movie_id</ColNames>
       <Primary>1</Primary>
       <UnderlyingIndexName>sqlite_autoindex_ratings_1</UnderlyingIndexName>
     </key>
-    <column id="588" parent="558" name="room_id">
+    <column id="589" parent="558" name="room_id">
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>VARCHAR(255)|0s</StoredType>
     </column>
-    <column id="589" parent="558" name="user_id">
+    <column id="590" parent="558" name="user_id">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StoredType>INTEGER|0s</StoredType>
     </column>
-    <foreign-key id="590" parent="558">
+    <foreign-key id="591" parent="558">
       <ColNames>room_id</ColNames>
       <RefColNames>id</RefColNames>
       <RefTableName>rooms</RefTableName>
     </foreign-key>
-    <foreign-key id="591" parent="558">
+    <foreign-key id="592" parent="558">
       <ColNames>user_id</ColNames>
       <RefColNames>id</RefColNames>
       <RefTableName>users</RefTableName>
     </foreign-key>
-    <index id="592" parent="558" name="sqlite_autoindex_room_members_1">
+    <index id="593" parent="558" name="sqlite_autoindex_room_members_1">
       <ColNames>room_id
 user_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <Unique>1</Unique>
     </index>
-    <key id="593" parent="558">
+    <key id="594" parent="558">
       <ColNames>room_id
 user_id</ColNames>
       <Primary>1</Primary>
       <UnderlyingIndexName>sqlite_autoindex_room_members_1</UnderlyingIndexName>
     </key>
-    <column id="594" parent="559" name="id">
+    <column id="595" parent="559" name="id">
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>VARCHAR(255)|0s</StoredType>
     </column>
-    <column id="595" parent="559" name="name">
+    <column id="596" parent="559" name="name">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StoredType>VARCHAR|0s</StoredType>
     </column>
-    <column id="596" parent="559" name="is_private">
+    <column id="597" parent="559" name="is_private">
       <NotNull>1</NotNull>
       <Position>3</Position>
       <StoredType>BOOLEAN|0s</StoredType>
     </column>
-    <index id="597" parent="559" name="sqlite_autoindex_rooms_1">
+    <index id="598" parent="559" name="sqlite_autoindex_rooms_1">
       <ColNames>id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <Unique>1</Unique>
     </index>
-    <key id="598" parent="559">
+    <key id="599" parent="559">
       <ColNames>id</ColNames>
       <Primary>1</Primary>
       <UnderlyingIndexName>sqlite_autoindex_rooms_1</UnderlyingIndexName>
     </key>
-    <key id="599" parent="559">
+    <key id="600" parent="559">
       <ColNames>id</ColNames>
       <UnderlyingIndexName>sqlite_autoindex_rooms_1</UnderlyingIndexName>
     </key>
-    <column id="600" parent="560" name="type">
+    <column id="601" parent="560" name="type">
       <Position>1</Position>
       <StoredType>TEXT|0s</StoredType>
     </column>
-    <column id="601" parent="560" name="name">
+    <column id="602" parent="560" name="name">
       <Position>2</Position>
       <StoredType>TEXT|0s</StoredType>
     </column>
-    <column id="602" parent="560" name="tbl_name">
+    <column id="603" parent="560" name="tbl_name">
       <Position>3</Position>
       <StoredType>TEXT|0s</StoredType>
     </column>
-    <column id="603" parent="560" name="rootpage">
+    <column id="604" parent="560" name="rootpage">
       <Position>4</Position>
       <StoredType>INT|0s</StoredType>
     </column>
-    <column id="604" parent="560" name="sql">
+    <column id="605" parent="560" name="sql">
       <Position>5</Position>
       <StoredType>TEXT|0s</StoredType>
     </column>
-    <column id="605" parent="561" name="id">
+    <column id="606" parent="561" name="id">
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>INTEGER|0s</StoredType>
     </column>
-    <column id="606" parent="561" name="telegram_id">
+    <column id="607" parent="561" name="telegram_id">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StoredType>VARCHAR|0s</StoredType>
     </column>
-    <column id="607" parent="561" name="username">
+    <column id="608" parent="561" name="username">
       <NotNull>1</NotNull>
       <Position>3</Position>
       <StoredType>VARCHAR|0s</StoredType>
     </column>
-    <column id="608" parent="561" name="current_room">
+    <column id="609" parent="561" name="current_room">
       <NotNull>1</NotNull>
       <Position>4</Position>
       <StoredType>VARCHAR|0s</StoredType>
     </column>
-    <index id="609" parent="561" name="sqlite_autoindex_users_1">
+    <index id="610" parent="561" name="sqlite_autoindex_users_1">
       <ColNames>telegram_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <Unique>1</Unique>
     </index>
-    <key id="610" parent="561">
+    <key id="611" parent="561">
       <ColNames>id</ColNames>
       <Primary>1</Primary>
     </key>
-    <key id="611" parent="561">
+    <key id="612" parent="561">
       <ColNames>telegram_id</ColNames>
       <UnderlyingIndexName>sqlite_autoindex_users_1</UnderlyingIndexName>
     </key>

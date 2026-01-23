@@ -47,6 +47,7 @@ class Rating(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), primary_key=True)
     movie_id: Mapped[int] = mapped_column(ForeignKey('movies.id'), primary_key=True)
     score: Mapped[float] = mapped_column(Float, nullable=True)  # 1-10 с шагом 0.5
+    skipped: Mapped[bool] = mapped_column()
 
     user: Mapped["User"] = relationship()
     movie: Mapped["Movie"] = relationship()

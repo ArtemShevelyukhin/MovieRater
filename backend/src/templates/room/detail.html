@@ -152,21 +152,29 @@
 
 {% block scripts %}
 <script>
-// 1. Используем правильный селектор .rate-btn
+// Инициализация ID текущего фильма из контекста шаблона
+let current_movie_id = {{ current_movie.id if current_movie else 0 }};
+
 const numbers = document.querySelectorAll('.rate-btn');
 const ratingDisplay = document.getElementById('rating-value');
 const skipBtn = document.getElementById('skip-btn');
 const statusInfo = document.getElementById('status-info');
 
-// В начале скрипта инициализируем ID
-let current_movie_id = {{ current_movie.id if current_movie else 0 }};
-
-
+/**
+ * Обработка клика по оценке или кнопке пропуска
+ * @param {HTMLElement} element - Элемент, на который нажали (для смены стилей)
+ * @param {number|null} score - Значение оценки или null для пропуска
+ */
 async function handleRatingClick(element, score) {
-    const statusInfo = document.getElementById('status-info');
     const container = document.querySelector('.movie-container');
 
+    // 1. Визуальное переключение классов до/во время запроса
+    numbers.forEach(n => n.classList.remove('active'));
+    skipBtn.classList.remove('active');
+    element.classList.add('active');
+
     try {
+        // Вызов эндпоинта submit_rating (убедитесь, что он реализован в backend)
         const response = await fetch("{{ url_for('submit_rating', room_id=room.id) }}", {
             method: 'POST',
             headers: {
@@ -174,63 +182,68 @@ async function handleRatingClick(element, score) {
                 'X-Telegram-Init-Data': window.Telegram?.WebApp?.initData || ""
             },
             body: JSON.stringify({
-                movie_id: current_movie_id, // Используем переменную
+                movie_id: current_movie_id,
                 score: score
             })
         });
 
+        if (!response.ok) throw new Error('Ошибка сервера');
+
         const data = await response.json();
 
         if (data.has_next) {
-            // Плавное обновление контента
+            // Обновляем интерфейс новым фильмом без перезагрузки страницы
             updateMovieUI(data.movie);
         } else {
-            container.innerHTML = "<h2>Ура! Вы оценили все фильмы в этой комнате.</h2>";
+            // Если фильмов больше нет, показываем финальное сообщение
+            container.innerHTML = `
+                <div style="text-align:center; padding: 40px 20px;">
+                    <h2>🍿 Все готово!</h2>
+                    <p style="color: var(--text-secondary); margin-top:10px;">
+                        Вы оценили все доступные фильмы в этой комнате.
+                    </p>
+                </div>`;
         }
 
     } catch (err) {
-        statusInfo.innerText = "Ошибка сети";
+        console.error(err);
+        statusInfo.innerText = "Ошибка при сохранении оценки";
+        statusInfo.style.color = "var(--accent)";
     }
 }
 
+/**
+ * Обновление данных о фильме в DOM
+ */
 function updateMovieUI(movie) {
-    // 1. Обновляем заголовок
+    // 1. Обновляем заголовок и постер
     document.querySelector('.movie-title').innerText = movie.title;
+    const img = document.querySelector('.poster-wrapper img');
+    img.src = movie.poster_url;
+    img.alt = movie.title;
 
-    // 2. Обновляем постер
-    document.querySelector('.poster-wrapper img').src = movie.poster_url;
+    // 2. Сбрасываем состояние элементов управления
+    numbers.forEach(btn => btn.classList.remove('active'));
+    skipBtn.classList.remove('active');
 
-    // 3. Сбрасываем кнопки оценок
-    document.querySelectorAll('.rate-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('skip-btn').classList.remove('active');
-    document.getElementById('rating-val-display').innerText = "не поставлена";
-    document.getElementById('status-info').innerText = "";
+    // Исправлено: ID элемента в HTML — 'rating-value'
+    if (ratingDisplay) ratingDisplay.innerText = "не поставлена";
+    if (statusInfo) statusInfo.innerText = "";
 
-    // 4. Обновляем ID текущего фильма для следующего запроса
+    // 3. Обновляем глобальный ID для следующего запроса
     current_movie_id = movie.id;
 }
 
-// Обработка клика по цифрам
+// Слушатели событий с передачей 2-х параметров: (элемент, значение)
 numbers.forEach(num => {
-    num.addEventListener('click', async () => {
+    num.addEventListener('click', () => {
         const val = parseInt(num.dataset.value);
-
-        // Визуальное обновление
-        numbers.forEach(n => n.classList.remove('active'));
-        num.classList.add('active');
-        skipBtn.classList.remove('active');
-
-        await handleRatingClick(val);
+        handleRatingClick(num, val);
     });
 });
 
-// Обработка клика по "Пропустить"
-skipBtn.addEventListener('click', async () => {
-    // Визуальное обновление
-    numbers.forEach(n => n.classList.remove('active'));
-    skipBtn.classList.add('active');
-
-    await handleRatingClick(null);
+skipBtn.addEventListener('click', () => {
+    handleRatingClick(skipBtn, null);
 });
 </script>
 {% endblock %}

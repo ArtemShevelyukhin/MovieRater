@@ -46,7 +46,10 @@ async def show_room(room_id: str,
 
     # 2. Получаем последний добавленный фильм через таблицу связи MoviesInRoom
     # Используем join для доступа к дате добавления
-    current_movie, rating = get_next_unrated_movie_for_user(db, room_id, user.id)
+
+    result = get_next_unrated_movie_for_user(db, room_id, user.id)
+    if result:
+        current_movie, rating = result
 
     # 3. Ищем оценку текущего пользователя (заглушка ID=1, пока нет системы сессий)
     # # В реальном коде используйте user.id из get_current_user
@@ -57,12 +60,14 @@ async def show_room(room_id: str,
     # if rating_obj:
     #     user_rating = rating_obj.score
 
-    return templates.TemplateResponse("room/detail.html", {
-        "request": request,
-        "room": room,
-        "current_movie": current_movie,
-        "user_rating": rating.score if rating else None
-    })
+        return templates.TemplateResponse("room/detail.html", {
+            "request": request,
+            "room": room,
+            "current_movie": current_movie,
+            "user_rating": rating.score if rating else None
+        })
+    else:
+        return {"status": "success", "has_next": False}
 
 @rooms.get("/")
 async def get_rooms(request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
@@ -159,7 +164,6 @@ async def add_movie_to_room(
 @rooms.post("/{room_id}/ratings", name="submit_rating")
 async def submit_rating(
                     room_id: str,
-                    request: Request,
                     rating_create: RatingCreate,
                     db: Session = Depends(get_db),
                     user: User = Depends(get_current_user)
@@ -182,7 +186,8 @@ async def submit_rating(
         new_rating = Rating(
             user_id=user.id,
             movie_id=rating_create.movie_id,
-            score=rating_create.score
+            score=rating_create.score,
+            skipped=False if rating_create.score else True
         )
         db.add(new_rating)
 
@@ -193,9 +198,10 @@ async def submit_rating(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Ошибка при сохранении оценки, {e}")
 
-    next_movie_in_room, rating = get_next_unrated_movie_for_user(db, room_id, user.id)
+    result = get_next_unrated_movie_for_user(db, room_id, user.id)
+    if result:
+        next_movie_in_room, rating = result
 
-    if next_movie_in_room:
         return {
             "status": "success",
             "has_next": True,
@@ -205,8 +211,8 @@ async def submit_rating(
                 "poster_url": next_movie_in_room.poster_url or "/static/default.jpg"
             }
         }
-
-    return {"status": "success", "has_next": False}
+    else:
+        return {"status": "success", "has_next": False}
 
 
 @rooms.get("/{room_id}/history", name="get_room_history")

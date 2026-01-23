@@ -1,3 +1,4 @@
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from models import Movie, MoviesInRoom, Rating
 
@@ -10,5 +11,7 @@ def get_next_unrated_movie_for_user(db: Session, room_id: str, user_id: int) -> 
              .join(MoviesInRoom) \
              .filter(MoviesInRoom.room_id == room_id) \
              .filter(Rating.score.is_(None)) \
+             .filter(Rating.skipped.is_not(False)) \
+             .filter(or_(Rating.skipped.is_(None),Rating.skipped.is_(False))) \
              .order_by(MoviesInRoom.added_date.asc()) \
              .first()
