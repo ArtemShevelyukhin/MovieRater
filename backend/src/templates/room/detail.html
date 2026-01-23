@@ -158,14 +158,21 @@ const ratingDisplay = document.getElementById('rating-value');
 const skipBtn = document.getElementById('skip-btn');
 const statusInfo = document.getElementById('status-info');
 
+// В начале скрипта инициализируем ID
+let current_movie_id = {{ current_movie.id if current_movie else 0 }};
+
+
 async function handleRatingClick(element, score) {
     const statusInfo = document.getElementById('status-info');
     const container = document.querySelector('.movie-container');
 
     try {
-        const response = await fetch("{{ url_for('rooms.submit_rating', room_id=room.id) }}", {
+        const response = await fetch("{{ url_for('submit_rating', room_id=room.id) }}", {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Telegram-Init-Data': window.Telegram?.WebApp?.initData || ""
+            },
             body: JSON.stringify({
                 movie_id: current_movie_id, // Используем переменную
                 score: score
@@ -203,38 +210,6 @@ function updateMovieUI(movie) {
     current_movie_id = movie.id;
 }
 
-// В начале скрипта инициализируем ID
-let current_movie_id = {{ current_movie.id if current_movie else 0 }};
-
-
-async function submitRating(score) {
-    statusInfo.innerText = "Сохранение...";
-
-    try {
-        // Убедись, что имя эндпоинта совпадает с тем, что в rooms.py (обычно 'rooms.submit_rating')
-        const response = await fetch("{{ url_for('submit_rating', room_id=room.id) }}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Telegram-Init-Data': window.Telegram?.WebApp?.initData || ""
-            },
-            body: JSON.stringify({
-                movie_id: {{ current_movie.id if current_movie else 0 }},
-                score: score
-            })
-        });
-
-        if (!response.ok) throw new Error();
-
-        statusInfo.innerText = score === null ? "Пропущено" : "Оценка " + score + " сохранена";
-        ratingDisplay.textContent = score === null ? "пропущено" : score;
-    } catch (err) {
-        statusInfo.innerText = "Ошибка сохранения";
-        console.error(err);
-    }
-
-}
-
 // Обработка клика по цифрам
 numbers.forEach(num => {
     num.addEventListener('click', async () => {
@@ -245,7 +220,7 @@ numbers.forEach(num => {
         num.classList.add('active');
         skipBtn.classList.remove('active');
 
-        await submitRating(val);
+        await handleRatingClick(val);
     });
 });
 
@@ -255,7 +230,7 @@ skipBtn.addEventListener('click', async () => {
     numbers.forEach(n => n.classList.remove('active'));
     skipBtn.classList.add('active');
 
-    await submitRating(null);
+    await handleRatingClick(null);
 });
 </script>
 {% endblock %}
