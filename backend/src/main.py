@@ -37,6 +37,7 @@ def register(telegram_token: str, db: Session = Depends(get_db)):
 
 @app.get("/", response_class=HTMLResponse)
 def hello_world():
+    print('RUN: main.py -> hello_world')
     return FileResponse("templates/index.html")
 
 

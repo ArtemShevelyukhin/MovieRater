@@ -22,6 +22,15 @@
         align-items: start;
     }
 
+    button.sort-link {
+        background: none;
+        border: none;
+        padding: 0;
+        font: inherit;
+        cursor: pointer;
+        outline: inherit;
+    }
+
     .poster-side { display: flex; flex-direction: column; gap: 4px; }
     .mini-poster { width: 80px; border-radius: 8px; object-fit: cover; }
     .movie-title { font-size: 1rem; font-weight: bold; grid-column: 1 / 4; margin-bottom: 4px; }
@@ -47,8 +56,24 @@
 <div class="history-container">
     <div class="sort-block">
         Сортировать по:
-        <a href="?sort_by=date?" class="sort-link {% if current_sort == 'date' %}active{% endif %}">дате</a>
-        <a href="?sort_by=avg_rating" class="sort-link {% if current_sort == 'avg_rating' %}active{% endif %}">средней</a>
+
+        <button type="button"
+                class="sort-link {% if current_sort == 'date' %}active{% endif %}"
+                onclick="safeNavigate('{{ url_for('get_room_history', room_id=room_id) }}?sort_by=date')">
+            Дате
+        </button>
+
+        <button type="button"
+                class="sort-link {% if current_sort == 'avg_rating' %}active{% endif %}"
+                onclick="safeNavigate('{{ url_for('get_room_history', room_id=room_id) }}?sort_by=avg_rating')">
+            Cредней Оценке
+        </button>
+
+        <button type="button"
+                class="sort-link {% if current_sort == 'my_rating' %}active{% endif %}"
+                onclick="safeNavigate('{{ url_for('get_room_history', room_id=room_id) }}?sort_by=my_rating')">
+            Моей Оценке
+        </button>
     </div>
 
     {% for item in history %}

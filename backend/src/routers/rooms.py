@@ -4,9 +4,9 @@ import urllib
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException, status, Header
-from sqlalchemy import func
+from sqlalchemy import func, and_
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 from typing import Annotated
 
 from starlette.responses import HTMLResponse, RedirectResponse, JSONResponse
@@ -39,6 +39,7 @@ async def show_room(room_id: str,
                     db: Session = Depends(get_db),
                     user: User = Depends(get_current_user)
                     ):
+    print('RUN: rooms -> show_room')
     # Получить комнату и проверить членство
     room = db.query(Room).filter(Room.id == room_id).first()
     if not room:
@@ -63,6 +64,7 @@ async def show_room(room_id: str,
         return templates.TemplateResponse("room/detail.html", {
             "request": request,
             "room": room,
+            "room_id": room.id,
             "current_movie": current_movie,
             "user_rating": rating.score if rating else None
         })
@@ -86,7 +88,7 @@ async def get_rooms(request: Request, db: Session = Depends(get_db), user: User 
     #     raise HTTPException(401, "Invalid initData")
     # user_data = json.loads(urllib.parse.unquote(user_str))
 
-
+    print('RUN: rooms -> get_rooms')
     room = db.query(Room).filter(Room.id == KINO_KREKER).first()
     user.rooms.append(room)
     try:
@@ -215,7 +217,7 @@ async def submit_rating(
         return {"status": "success", "has_next": False}
 
 
-@rooms.get("/{room_id}/history", name="get_room_history")
+@rooms.get("/{room_id}/history/", name="get_room_history")
 async def get_room_history(
                     room_id: str,
                     request: Request,
@@ -223,6 +225,10 @@ async def get_room_history(
                     db: Session = Depends(get_db),
                     user: User = Depends(get_current_user)
 ):
+    print('RUN: rooms -> get_room_history')
+
+    my_rating_alias = aliased(Rating)
+
     query = db.query(
         Movie,
         MoviesInRoom.added_date,
@@ -237,9 +243,13 @@ async def get_room_history(
     # Логика сортировки
     if sort_by == "my_rating":
         # Сложная сортировка: нужно джойнить оценки текущего пользователя
-        pass  # Для MVP оставим базовую, ниже добавим детализацию
+        # Чтобы отсортировать по "моей" оценке, нужно приджойнить оценки текущего юзера
+        query = query.outerjoin(
+            my_rating_alias,
+            and_(Movie.id == my_rating_alias.movie_id, my_rating_alias.user_id == user.id)
+        ).order_by(my_rating_alias.score.desc().nulls_last())
     elif sort_by == "avg_rating":
-        query = query.order_by(func.avg(Rating.score).desc())
+        query = query.order_by(func.avg(Rating.score).desc().nulls_last())
     else:
         query = query.order_by(MoviesInRoom.added_date.desc())
 

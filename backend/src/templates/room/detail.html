@@ -175,7 +175,7 @@ async function handleRatingClick(element, score) {
 
     try {
         // Вызов эндпоинта submit_rating (убедитесь, что он реализован в backend)
-        const response = await fetch("{{ url_for('submit_rating', room_id=room.id) }}", {
+        const response = await fetch("{{ url_for('submit_rating', room_id=room_id) }}", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

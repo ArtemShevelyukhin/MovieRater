@@ -98,15 +98,16 @@
       <nav class="bottom-nav">
           {# Ссылка на историю #}
           <a href="javascript:void(0)"
-             onclick="safeNavigate('{{ url_for('get_room_history', room_id=room.id) if room else '#' }}')"
+             onclick="safeNavigate('{{ url_for('get_room_history', room_id=room_id) }}')"
              class="nav-item">
-              <span>📜️</span><span>История</span>
+             <span>📜️</span><span>История</span>
           </a>
 
           {# Ссылка на текущий фильм (главный экран комнаты) #}
-          <a href="{% if room %}{{ url_for('show_room', room_id=room.id) }}{% else %}#{% endif %}"
-             class="nav-item {% if 'history' not in request.url.path and 'stats' not in request.url.path %}active{% endif %}">
-              <span>🎬</span><span>Фильм</span>
+          <a href="javascript:void(0)"
+             onclick="safeNavigate('{{ url_for('show_room', room_id=room_id) }}')"
+             class="nav-item active">
+             <span>🎬</span><span>Фильм</span>
           </a>
 
           {# Заглушка для статистики #}
@@ -124,14 +125,42 @@
 
 <!-- JS для обработки callback -->
 <script>
-function safeNavigate(baseUrl) {
-    if (baseUrl === '#') return;
+// В блоке <script> файла base.html
+async function safeNavigate(baseUrl) {
+    if (baseUrl === '#' || !baseUrl) return;
 
-    const initData = window.Telegram.WebApp.initData;
-    const separator = baseUrl.includes('?') ? '&' : '?';
+    const webApp = window.Telegram.WebApp;
+    const initData = webApp.initData;
 
-    // Переходим по адресу /rooms/ID/history?_auth=...
-    window.location.href = baseUrl + separator + "_auth=" + encodeURIComponent(initData);
+    try {
+        // Показываем индикатор загрузки Telegram (стандартный UX)
+        webApp.MainButton.showProgress();
+
+        const response = await fetch(baseUrl, {
+            method: 'GET',
+            headers: {
+                'X-Telegram-Init-Data': initData,
+                'X-Requested-With': 'XMLHttpRequest' // Полезно для отличия AJAX от обычного перехода
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Ошибка загрузки: ${response.status}`);
+        }
+
+        const html = await response.text();
+
+        // Обновляем содержимое страницы
+        document.open();
+        document.write(html);
+        document.close();
+
+    } catch (err) {
+        console.error("Navigation error:", err);
+        alert("Не удалось загрузить страницу");
+    } finally {
+        webApp.MainButton.hideProgress();
+    }
 }
 function onTelegramAuth(user) {
     fetch('/auth/telegram', {
