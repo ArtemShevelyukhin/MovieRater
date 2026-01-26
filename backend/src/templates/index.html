@@ -6,27 +6,12 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-    <h1>Информация о пользователе</h1>
-    <div id="user-info">Загрузка...</div>
-
     <script>
         const webApp = window.Telegram.WebApp;
         webApp.ready();
 
         const userInfoDiv = document.getElementById('user-info');
         const user = webApp.initDataUnsafe.user;
-
-        if (!user) {
-            userInfoDiv.innerHTML = 'Данные пользователя недоступны';
-        }
-
-        // Отображаем информацию о пользователе сразу
-        userInfoDiv.innerHTML = `
-            ID: ${user.id}<br>
-            Username: ${user.username || 'Не указан'}<br>
-            Имя: ${user.first_name || 'Не указано'}<br>
-            Фамилия: ${user.last_name || 'Не указана'}
-        `;
 
         // Асинхронная функция для загрузки комнаты
         async function loadRoom() {
