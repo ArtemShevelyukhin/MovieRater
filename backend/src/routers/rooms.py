@@ -51,6 +51,8 @@ async def show_room(room_id: str,
     result = get_next_unrated_movie_for_user(db, room_id, user.id)
     if result:
         current_movie, rating = result
+    else:
+        current_movie, rating = None, None
 
     # 3. Ищем оценку текущего пользователя (заглушка ID=1, пока нет системы сессий)
     # # В реальном коде используйте user.id из get_current_user
@@ -61,15 +63,14 @@ async def show_room(room_id: str,
     # if rating_obj:
     #     user_rating = rating_obj.score
 
-        return templates.TemplateResponse("room/detail.html", {
-            "request": request,
-            "room": room,
-            "room_id": room.id,
-            "current_movie": current_movie,
-            "user_rating": rating.score if rating else None
-        })
-    else:
-        return {"status": "success", "has_next": False}
+    return templates.TemplateResponse("room/detail.html", {
+        "request": request,
+        "room": room,
+        "room_id": room.id,
+        "current_movie": current_movie,
+        "user_rating": rating.score if rating else None
+    })
+
 
 @rooms.get("/")
 async def get_rooms(request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
@@ -214,7 +215,10 @@ async def submit_rating(
             }
         }
     else:
-        return {"status": "success", "has_next": False}
+        return {
+            "status": "success",
+            "has_next": False
+        }
 
 
 @rooms.get("/{room_id}/history/", name="get_room_history")
@@ -264,15 +268,17 @@ async def get_room_history(
         ).scalar()
 
         # Получаем все оценки для попапа
-        all_ratings = db.query(User.username, Rating.score).join(User).filter(
-            Rating.movie_id == m.id
-        ).all()
+        all_ratings = (db.query(User.username, Rating.score)
+                       .join(User)
+                       .filter(Rating.movie_id == m.id)
+                       .order_by(Rating.score.desc())
+                       .all())
 
         history_list.append({
             "movie": m,
             "added_date": added_date.strftime("%d.%m.%Y"),
             "added_by": added_by_name,
-            "avg_score": round(avg_score, 1) if avg_score else 0,
+            "avg_score": round(avg_score, 2) if avg_score else 0,
             "my_score": my_rating or "-",
             "details": [{"name": r[0], "score": r[1]} for r in all_ratings]
         })
