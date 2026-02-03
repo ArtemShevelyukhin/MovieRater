@@ -267,6 +267,9 @@ async def get_room_history(
             Rating.user_id == user.id
         ).scalar()
 
+        if my_rating is None:
+            my_rating = '-'
+
         # Получаем все оценки для попапа
         all_ratings = (db.query(User.username, Rating.score)
                        .join(User)
@@ -279,7 +282,7 @@ async def get_room_history(
             "added_date": added_date.strftime("%d.%m.%Y"),
             "added_by": added_by_name,
             "avg_score": round(avg_score, 2) if avg_score else 0,
-            "my_score": my_rating or "-",
+            "my_score": my_rating,
             "details": [{"name": r[0], "score": r[1]} for r in all_ratings]
         })
 
@@ -289,4 +292,3 @@ async def get_room_history(
         "room_id": room_id,
         "current_sort": sort_by
     })
-

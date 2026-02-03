@@ -130,7 +130,7 @@
     <div class="rating-section">
       <p class="rating-label">Ваша оценка: <span id="rating-value">{% if user_rating %}{{ user_rating }}{% else %}не поставлена{% endif %}</span></p>
       <div class="rating-scale">
-        {% for i in range(1, 11) %}
+        {% for i in range(0, 11) %}
           {% set r_type = "low" if i <= 4 else ("mid" if i <= 6 else "high") %}
           {# Добавлен класс rate-btn и data-value #}
           <div class="rate-btn {{ r_type }} {% if i == user_rating %}active{% endif %}" data-value="{{ i }}">
@@ -211,7 +211,7 @@ async function handleRatingClick(element, score) {
 
     } catch (err) {
         console.error(err);
-        statusInfo.innerText = "Ошибка при сохранении оценки";
+        statusInfo.innerText = "Ошибка при сохранении оценки detail.html";
         statusInfo.style.color = "var(--accent)";
     }
 }

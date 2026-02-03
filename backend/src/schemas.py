@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
+
 
 class UserBase(BaseModel):
     telegram_id: str
@@ -55,7 +56,7 @@ class RatingBase(BaseModel):
     def validate_score(cls, value: float) -> float:
         if value is None:
             return value
-        if not 1 <= value <= 10 or (value * 2) % 1 != 0:  # Шаг 0.5
+        if not 0 <= value <= 10 or (value * 2) % 1 != 0:  # Шаг 0.5
             raise ValueError('Score must be between 1 and 10 with 0.5 step')
         return value
 
