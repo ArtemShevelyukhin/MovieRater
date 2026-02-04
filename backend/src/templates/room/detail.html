@@ -160,7 +160,7 @@
       </div>
         <br>
         <div style="width: 100%; display: flex; justify-content: center; margin-bottom: 15px;">
-            <button id="half-toggle" class="half-btn">
+            <button id="half-toggle" class="half-btn" onclick="toggleHalf()">
                 +0.5
             </button>
         </div>
@@ -194,14 +194,15 @@ const halfBtn = document.getElementById('half-toggle');
 const statusInfo = document.getElementById('status-info');
 
 /**
- * Обработка переключателя +0.5
- * Только меняет состояние и визуальный класс, запрос не отправляет
+ * Переключение модификатора +0.5 (без отправки на сервер).
  */
-if (halfBtn) {
-    halfBtn.addEventListener('click', () => {
-        isHalfActive = !isHalfActive;
+function toggleHalf() {
+    isHalfActive = !isHalfActive;
+    const halfBtn = document.getElementById('half-toggle');
+    if (halfBtn) {
+        // Добавляем или убираем класс active для визуального выделения (как в detail.html)
         halfBtn.classList.toggle('active', isHalfActive);
-    });
+    }
 }
 
 /**

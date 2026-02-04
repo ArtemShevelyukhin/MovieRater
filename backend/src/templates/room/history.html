@@ -89,6 +89,26 @@
         color: white;
     }
 
+    .half-btn {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        width: 80px;
+    }
+
+    /* Когда кнопка "нажата" */
+    .half-btn.active {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+        transform: scale(1.05);
+        box-shadow: 0 0 10px rgba(229, 9, 20, 0.3);
+    }
 </style>
 {% endblock %}
 
@@ -164,6 +184,12 @@
             <div class="rating-option" onclick="submitNewRating({{ i }})">{{ i }}</div>
             {% endfor %}
         </div>
+        <br>
+        <div style="width: 100%; display: flex; justify-content: center; margin-bottom: 15px;">
+            <button id="half-toggle" class="half-btn" onclick="toggleHalf()">
+                +0.5
+            </button>
+        </div>
         <button onclick="closeEditModal()" style="margin-top:20px; width:100%; padding:8px; background:transparent; border:1px solid var(--border); color:var(--text-secondary); border-radius:8px;">Отмена</button>
     </div>
 </div>
@@ -171,6 +197,10 @@
 
 {% block scripts %}
 <script>
+
+// Добавить в блок scripts
+let selectedMovieId = null;
+
 function showRatings(details) {
     const list = document.getElementById('modal-list');
     list.innerHTML = '';
@@ -184,22 +214,51 @@ function closeModal() {
     document.getElementById('modal-overlay').style.display = 'none';
 }
 
-// Добавить в блок scripts
-let selectedMovieId = null;
-
 function openEditRatingModal(movieId, movieTitle) {
     selectedMovieId = movieId;
+    isHalfActive = false;
+
+    // Визуальный сброс кнопки +0.5
+    const halfBtn = document.getElementById('half-toggle');
+    if (halfBtn) {
+        halfBtn.classList.remove('active');
+    }
+
+    // Установка заголовка и отображение оверлея
     document.getElementById('edit-movie-title').innerText = `Оценить: ${movieTitle}`;
     document.getElementById('edit-rating-overlay').style.display = 'flex';
 }
 
+/**
+ * Закрытие окна редактирования.
+ */
 function closeEditModal() {
     document.getElementById('edit-rating-overlay').style.display = 'none';
     selectedMovieId = null;
+    isHalfActive = false;
 }
 
-async function submitNewRating(score) {
+/**
+ * Переключение модификатора +0.5 (без отправки на сервер).
+ */
+function toggleHalf() {
+    isHalfActive = !isHalfActive;
+    const halfBtn = document.getElementById('half-toggle');
+    if (halfBtn) {
+        // Добавляем или убираем класс active для визуального выделения (как в detail.html)
+        halfBtn.classList.toggle('active', isHalfActive);
+    }
+}
+
+/**
+ * Отправка итоговой оценки на бекенд.
+ * Вызывается при нажатии на цифру (1-10).
+ */
+async function submitNewRating(baseScore) {
     if (!selectedMovieId) return;
+
+    // Вычисляем финальное значение: база + 0.5, если кнопка нажата
+    const finalScore = isHalfActive ? (parseFloat(baseScore) + 0.5) : parseFloat(baseScore);
 
     try {
         const response = await fetch("{{ url_for('submit_rating', room_id=room_id) }}", {
@@ -210,18 +269,20 @@ async function submitNewRating(score) {
             },
             body: JSON.stringify({
                 movie_id: selectedMovieId,
-                score: score
+                score: finalScore
             })
         });
 
         if (response.ok) {
-            // Перезагружаем страницу для обновления средних и личных оценок
+            // Перезагрузка страницы для обновления данных в истории
             window.location.reload();
         } else {
-            alert("Ошибка при сохранении оценки history.html");
+            const error = await response.json();
+            alert("Ошибка сохранения: " + (error.detail || "неизвестная ошибка"));
         }
     } catch (err) {
         console.error("Network error:", err);
+        alert("Ошибка сети при отправке оценки");
     } finally {
         closeEditModal();
     }
